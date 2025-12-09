@@ -1,5 +1,7 @@
 # 1. Install Python and MySQL
+
 # 2. Create a Table
+
 # 3. Save this code in your local system and run the code.
 
 ## Screenshot:
