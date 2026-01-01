@@ -79,16 +79,11 @@ Medical practitioners face several challenges in prescription management:
 ## 📸 Screenshots
 
 ### Main Application Interface
-![Main Interface](screenshots/main_interface.png)
-*Prescription entry form with patient details, medication information, and doctor credentials*
-
-### Data Table View
-![Data Table](screenshots/data_table.png)
-*Comprehensive table displaying all prescription records with 17 columns*
+<img width="1902" height="969" alt="Image" src="https://github.com/user-attachments/assets/611b71bd-52b9-4706-8c73-ca1704357b5f" />
 
 ### PDF Prescription Report
-![PDF Report](screenshots/pdf_sample.png)
-*Professional PDF prescription report with patient info, medication details, and doctor information*
+
+*See PDF prescription report named Prescription_STEVE...*
 
 ---
 
@@ -236,7 +231,7 @@ Distributed under the MIT License. See `LICENSE` for more information.
 
 **Kalpa Das**
 - GitHub: [@kalpadas599](https://github.com/kalpadas599)
-- Project: Academic Project - 3rd Semester
+- Project: Academic Project
 
 ---
 
@@ -253,10 +248,11 @@ Distributed under the MIT License. See `LICENSE` for more information.
 
 For issues and questions:
 - Open an issue on GitHub
-- Email: your.email@example.com
+- Email: kalpadas599@gmail.com
 
 ---
 
 <div align="center">
 Made with ❤️ for better healthcare management
 </div>
+
