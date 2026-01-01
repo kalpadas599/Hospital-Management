@@ -4,7 +4,14 @@ import random
 import time
 import datetime
 from tkinter import messagebox
+from tkinter import filedialog
 import mysql.connector
+from reportlab.lib.pagesizes import letter, A4
+from reportlab.lib import colors
+from reportlab.lib.units import inch
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.enums import TA_CENTER, TA_LEFT
 
 
 class Hospital:
@@ -167,17 +174,20 @@ class Hospital:
         btnPrescriptionData=Button(Buttonframe,command=self.iPrescriptionData,text="Prescription Data",bg="#27AE60",fg="white",font=("arial",12,"bold"),width=23,padx=2,pady=6,cursor="hand2")
         btnPrescriptionData.grid(row=0,column=1)
 
+        btnDownloadPDF=Button(Buttonframe,command=self.download_prescription_pdf,text="Download PDF",bg="#9B59B6",fg="white",font=("arial",12,"bold"),width=23,padx=2,pady=6,cursor="hand2")
+        btnDownloadPDF.grid(row=0,column=2)
+
         btnUpdate=Button(Buttonframe,command=self.update_data,text="Update",bg="#F39C12",fg="white",font=("arial",12,"bold"),width=23,padx=2,pady=6,cursor="hand2")
-        btnUpdate.grid(row=0,column=2)
+        btnUpdate.grid(row=0,column=3)
 
         btnDelete=Button(Buttonframe,command=self.idelete,text="Delete",bg="#E74C3C",fg="white",font=("arial",12,"bold"),width=23,padx=2,pady=6,cursor="hand2")
-        btnDelete.grid(row=0,column=3)
+        btnDelete.grid(row=0,column=4)
 
         btnClear=Button(Buttonframe,command=self.clear,text="Clear",bg="#95A5A6",fg="white",font=("arial",12,"bold"),width=23,padx=2,pady=6,cursor="hand2")
-        btnClear.grid(row=0,column=4)
+        btnClear.grid(row=0,column=5)
 
         btnExit=Button(Buttonframe,command=self.iExit,text="Exit",bg="#34495E",fg="white",font=("arial",12,"bold"),width=23,padx=2,pady=6,cursor="hand2")
-        btnExit.grid(row=0,column=5)
+        btnExit.grid(row=0,column=6)
 
 
 
@@ -408,6 +418,151 @@ class Hospital:
         self.DateOfBirth.set("")
         self.PatientAddress.set("")
         self.txtPrescription.delete("1.0",END)
+
+
+
+    def download_prescription_pdf(self):
+        """Generate and download prescription as PDF"""
+        try:
+            # Check if prescription data exists
+            if not self.ref.get():
+                messagebox.showerror("Error", "Please fill in the prescription details first!")
+                return
+            
+            # Ask user where to save the file
+            patient_name = self.PatientName.get() if self.PatientName.get() else "Patient"
+            default_filename = f"Prescription_{patient_name}_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+            
+            filename = filedialog.asksaveasfilename(
+                defaultextension=".pdf",
+                filetypes=[("PDF files", "*.pdf"), ("All files", "*.*")],
+                initialfile=default_filename
+            )
+            
+            if not filename:
+                return  # User cancelled
+            
+            # Create PDF
+            doc = SimpleDocTemplate(filename, pagesize=letter)
+            story = []
+            styles = getSampleStyleSheet()
+            
+            # Custom styles
+            title_style = ParagraphStyle(
+                'CustomTitle',
+                parent=styles['Heading1'],
+                fontSize=24,
+                textColor=colors.HexColor('#2C3E50'),
+                spaceAfter=30,
+                alignment=TA_CENTER
+            )
+            
+            heading_style = ParagraphStyle(
+                'CustomHeading',
+                parent=styles['Heading2'],
+                fontSize=14,
+                textColor=colors.HexColor('#34495E'),
+                spaceAfter=12,
+                spaceBefore=12
+            )
+            
+            # Title
+            title = Paragraph("MEDICAL PRESCRIPTION", title_style)
+            story.append(title)
+            story.append(Spacer(1, 0.2*inch))
+            
+            # Date and Reference
+            date_text = f"Date: {datetime.datetime.now().strftime('%d-%m-%Y')}<br/>Reference No: {self.ref.get()}"
+            story.append(Paragraph(date_text, styles['Normal']))
+            story.append(Spacer(1, 0.3*inch))
+            
+            # Patient Information Section
+            story.append(Paragraph("PATIENT INFORMATION", heading_style))
+            patient_data = [
+                ['Patient Name:', self.PatientName.get()],
+                ['Patient ID:', self.PatientId.get()],
+                ['Date of Birth:', self.DateOfBirth.get()],
+                ['Address:', self.PatientAddress.get()],
+                ['Contact:', self.nhsNumber.get()],
+            ]
+            
+            patient_table = Table(patient_data, colWidths=[2*inch, 4*inch])
+            patient_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#ECF0F1')),
+                ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
+                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+                ('FONTNAME', (1, 0), (1, -1), 'Helvetica'),
+                ('FONTSIZE', (0, 0), (-1, -1), 10),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+                ('TOPPADDING', (0, 0), (-1, -1), 8),
+                ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+            ]))
+            story.append(patient_table)
+            story.append(Spacer(1, 0.3*inch))
+            
+            # Medication Information Section
+            story.append(Paragraph("MEDICATION DETAILS", heading_style))
+            medication_data = [
+                ['Medication:', self.Nameoftablets.get()],
+                ['Number of Tablets:', self.Dose.get()],
+                ['Daily Dose:', self.NumberofTablets.get()],
+                ['Blood Pressure:', self.Lot.get()],
+                ['Visit Date:', self.Issuedate.get()],
+                ['Important Instructions:', self.ExpDate.get()],
+                ['Side Effects:', self.DailyDose.get()],
+                ['Further Information:', self.sideEffects.get()],
+            ]
+            
+            medication_table = Table(medication_data, colWidths=[2*inch, 4*inch])
+            medication_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#ECF0F1')),
+                ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
+                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+                ('FONTNAME', (1, 0), (1, -1), 'Helvetica'),
+                ('FONTSIZE', (0, 0), (-1, -1), 10),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+                ('TOPPADDING', (0, 0), (-1, -1), 8),
+                ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+            ]))
+            story.append(medication_table)
+            story.append(Spacer(1, 0.3*inch))
+            
+            # Doctor Information Section
+            story.append(Paragraph("DOCTOR INFORMATION", heading_style))
+            doctor_data = [
+                ["Doctor's Name:", self.FurtherInformation.get()],
+                ['Registration No:', self.StorageAdvice.get()],
+                ['Qualification:', self.DrivingUsingMachine.get()],
+            ]
+            
+            doctor_table = Table(doctor_data, colWidths=[2*inch, 4*inch])
+            doctor_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#ECF0F1')),
+                ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
+                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+                ('FONTNAME', (1, 0), (1, -1), 'Helvetica'),
+                ('FONTSIZE', (0, 0), (-1, -1), 10),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+                ('TOPPADDING', (0, 0), (-1, -1), 8),
+                ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+            ]))
+            story.append(doctor_table)
+            story.append(Spacer(1, 0.5*inch))
+            
+            # Footer
+            footer_text = "<i>This is a computer-generated prescription. Please consult your doctor for any queries.</i>"
+            story.append(Paragraph(footer_text, styles['Normal']))
+            
+            # Build PDF
+            doc.build(story)
+            
+            messagebox.showinfo("Success", f"Prescription PDF saved successfully!\n\nLocation: {filename}")
+            
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to generate PDF: {str(e)}")
 
 
     def iExit(self):
